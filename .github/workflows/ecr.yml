@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: eu-north-1
-  ECR_REPOSITORY: my-devops-app
+  ECR_REPOSITORY: first-blood  # This must match your ECR console exactly
 
 jobs:
   build-and-push:
