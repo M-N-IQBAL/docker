@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: eu-north-1
-  ECR_REPOSITORY: first-blood  # This must match your ECR console exactly
+  ECR_REPOSITORY: first-blood
 
 jobs:
   build-and-push:
@@ -24,18 +24,23 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPOSITORY .
+          docker build -t $ECR_REPOSITORY:${{ steps.vars.outputs.TAG }} .
 
-      - name: Tag image
+      - name: Tag image for ECR
         run: |
-          docker tag $ECR_REPOSITORY:latest \
-          ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:latest
+          docker tag $ECR_REPOSITORY:${{ steps.vars.outputs.TAG }} \
+          ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ steps.vars.outputs.TAG }}
 
       - name: Push to ECR
         run: |
           docker push \
-          ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:latest
+          ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ steps.vars.outputs.TAG }}
